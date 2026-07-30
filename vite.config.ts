@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 
-// HTTPS 证书:mkcert 签发(覆盖 localhost / 127.0.0.1 / 局域网 IP)。
-// iPhone 只需安装 mkcert 根证书即可信任,从而能注册 Service Worker → 离线可用。
-const https = {
-  key: readFileSync('./.cert/localhost+2-key.pem'),
-  cert: readFileSync('./.cert/localhost+2.pem'),
-}
+// HTTPS 证书(mkcert 签发,覆盖 localhost / 127.0.0.1 / 局域网 IP):
+// 仅本地 dev/preview 需要;CI/构建环境没有 .cert/(被 gitignore),故文件存在才加载。
+const certKey = './.cert/localhost+2-key.pem'
+const certPem = './.cert/localhost+2.pem'
+const https =
+  existsSync(certKey) && existsSync(certPem)
+    ? { key: readFileSync(certKey), cert: readFileSync(certPem) }
+    : undefined
 
 // https://vite.dev/config/
 export default defineConfig({
