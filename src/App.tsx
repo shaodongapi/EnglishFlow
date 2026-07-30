@@ -76,31 +76,32 @@ export default function App() {
     }
   }, [])
 
-  if (!ready || !bankReady) {
-    return <div className="empty">加载中...</div>
-  }
-
   // 按使用天数推进学习日(1 ~ TOTAL_DAYS)
   const planDay = Math.min(todayDay + 1, TOTAL_DAYS)
-  const plan = getDay(planDay)!
+  const plan = getDay(planDay)
   const phase = phaseOfDay(planDay)
   const wordMap = getMap()
   const bank = getBank()
-  const newWords: Word[] = plan.vocab.map((w) => wordMap[w]).filter(Boolean) as Word[]
+  const newWords: Word[] = plan ? (plan.vocab.map((w) => wordMap[w]).filter(Boolean) as Word[]) : []
 
-  // 派生交互数据(手写优先,派生补齐)
+  // 派生交互数据(手写优先,派生补齐)。
+  // 注意:所有 hook 必须在任何早返回之前调用(Rules of Hooks),故在此处 useMemo。
   const scrambleItems: ScrambleItem[] = useMemo(
-    () => [...(plan.scramble ?? []), ...deriveScramble(plan)],
+    () => (plan ? [...(plan.scramble ?? []), ...deriveScramble(plan)] : []),
     [plan]
   )
   const matchItems: MatchItem[] = useMemo(
-    () => [...(plan.match ?? []), ...deriveMatch(plan, wordMap, bank)],
+    () => (plan ? [...(plan.match ?? []), ...deriveMatch(plan, wordMap, bank)] : []),
     [plan, wordMap, bank]
   )
   const dictationItems: DictationItem[] = useMemo(
-    () => [...(plan.dictation ?? []), ...deriveDictation(plan)],
+    () => (plan ? [...(plan.dictation ?? []), ...deriveDictation(plan)] : []),
     [plan]
   )
+
+  if (!ready || !bankReady || !plan) {
+    return <div className="empty">加载中...</div>
+  }
 
   // 动态 Tab 栏:首页 + 当前阶段启用模块(取前 4)+ 错题本(常驻末位),共 6 格
   const tabs: { key: string; label: string; ico: string }[] = [
