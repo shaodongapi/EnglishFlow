@@ -23,7 +23,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 /** 单道听写题:🔊 朗读 + 挖空填词。 */
-function DictationQ({ item, index, day }: { item: DictationItem; index: number; day?: number }) {
+export function DictationQ({ item, index, day }: { item: DictationItem; index: number; day?: number }) {
   const tokens = item.en.split(/\s+/)
   const blankSet = new Set(item.blanks)
   const [values, setValues] = useState<string[]>(item.blanks.map(() => ''))

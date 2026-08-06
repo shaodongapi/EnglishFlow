@@ -15,7 +15,7 @@ export function ErrorID({ items, day }: { items: ErrorIDItem[]; day?: number }) 
   )
 }
 
-function ErrorItem({ item, index, day }: { item: ErrorIDItem; index: number; day?: number }) {
+export function ErrorItem({ item, index, day }: { item: ErrorIDItem; index: number; day?: number }) {
   const [picked, setPicked] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const correct = picked === item.answer

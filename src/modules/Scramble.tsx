@@ -10,7 +10,7 @@ interface Props {
 }
 
 /** 单道拼装题:自管 state。沿用 .q / .opt / Explain 约定(参考 Cloze.tsx)。 */
-function ScrambleQ({ item, index, day }: { item: ScrambleItem; index: number; day?: number }) {
+export function ScrambleQ({ item, index, day }: { item: ScrambleItem; index: number; day?: number }) {
   // 打乱一次(用 key 重置时 useMemo 不必要,组件每次挂载重算即可)
   const [pool] = useState(() => {
     let s = shuffle(item.words)

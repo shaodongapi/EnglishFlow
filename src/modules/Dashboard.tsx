@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { DayPlan, Phase } from '../types'
+import type { DayPlan, Interaction, Phase } from '../types'
 import { getMap } from '../core/wordBank'
 import { PHRASES } from '../data/phrases'
 import { SYLLABUS, MODULE_LABELS, phaseProgress, syllabusProgress } from '../data/syllabus'
@@ -13,20 +13,7 @@ interface Props {
   scrambleCount: number
   matchCount: number
   dictationCount: number
-  onJump: (tab: string) => void
-}
-
-const TAB_OF: Record<string, string> = {
-  vocab: 'vocab',
-  grammar: 'grammar',
-  reading: 'reading',
-  scramble: 'scramble',
-  match: 'match',
-  dictation: 'dictation',
-  errorid: 'errorid',
-  cloze: 'cloze',
-  translation: 'translation',
-  writing: 'writing',
+  onJump: (tab: string, moduleKey?: Interaction) => void
 }
 
 export function Dashboard({
@@ -69,6 +56,30 @@ export function Dashboard({
 
   return (
     <>
+      {/* 一条龙入口 */}
+      <button
+        className="primary cta-study"
+        onClick={() => onJump('study')}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '16px 18px',
+          fontSize: 17,
+          marginBottom: 14,
+        }}
+      >
+        <span style={{ fontSize: 24 }}>🚀</span>
+        <div style={{ flex: 1, textAlign: 'left' }}>
+          <div style={{ fontWeight: 700 }}>开始今日学习</div>
+          <div style={{ fontSize: 12, opacity: 0.85 }}>
+            一条龙串起今日全部模块 · 可随时跳转、跳过
+          </div>
+        </div>
+        <span style={{ fontSize: 22 }}>›</span>
+      </button>
+
       {/* 当前阶段卡 */}
       <div className="card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -125,7 +136,6 @@ export function Dashboard({
         <h2>今日任务</h2>
         <div className="meta">按推荐顺序 · 当前阶段启用</div>
         {phase.modules.map((m) => {
-          const tab = TAB_OF[m]
           const count = countOf[m]
           const hasData = m === 'writing' || (count !== undefined && count > 0)
           const meta = MODULE_LABELS[m]
@@ -140,7 +150,7 @@ export function Dashboard({
           return (
             <button
               key={m}
-              onClick={() => onJump(tab)}
+              onClick={() => onJump('study', m)}
               style={{
                 display: 'flex',
                 alignItems: 'center',

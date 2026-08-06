@@ -12,6 +12,7 @@
   --warn: #f59e0b;
   --danger: #ef4444;
   --radius: 14px;
+  --tabbar-h: 62px;
   color-scheme: dark;
 }
 
@@ -70,7 +71,11 @@ a {
 
 /* layout */
 .app {
-  padding: 16px 16px 96px;
+  padding: 16px 16px calc(var(--tabbar-h) + 40px);
+}
+/* 学习页底部多一条动作栏,需更大留白 */
+.app-study {
+  padding-bottom: calc(var(--tabbar-h) + 92px);
 }
 .header {
   display: flex;
@@ -537,3 +542,122 @@ textarea {
   margin-bottom: 4px;
   word-break: break-word;
 }
+
+/* ===== 一条龙学习流程 ===== */
+
+/* 顶部 sticky:模块进度条 + 题号条 */
+.study-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--bg);
+  padding: 6px 0 2px;
+  margin-bottom: 4px;
+}
+
+/* 模块进度条(横向滚动) */
+.stepper {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.stepper::-webkit-scrollbar {
+  display: none;
+}
+.stepper .chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.stepper .chip .ico {
+  font-size: 15px;
+}
+.stepper .chip.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.stepper .chip.done {
+  color: var(--success);
+}
+.stepper .chip-count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.stepper .chip-check {
+  font-size: 11px;
+}
+
+/* 题号条 */
+.qstrip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 0 2px;
+  scrollbar-width: none;
+}
+.qstrip::-webkit-scrollbar {
+  display: none;
+}
+.qstrip .qdot {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+}
+.qstrip .qdot.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.qstrip .qdot.seen {
+  background: var(--surface);
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+/* 底部动作栏(浮于 Tab 栏之上) */
+.actionbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+.actionbar button {
+  flex: 1;
+}
+.actionbar button.primary {
+  flex: 1.4;
+}
+
+/* 首页一条龙入口按钮 */
+.cta-study:hover {
+  filter: brightness(1.08);
+}
+

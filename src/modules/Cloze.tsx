@@ -9,28 +9,33 @@ export function Cloze({ passage, day }: { passage: ClozePassage; day?: number })
     <div className="card">
       <h2>完形填空</h2>
       <div className="meta">{passage.blanks.length} 空 · 北京学位英语真题题型</div>
-
-      <div
-        style={{
-          background: 'var(--surface-2)',
-          borderRadius: 10,
-          padding: 14,
-          lineHeight: 1.9,
-          marginBottom: 12,
-        }}
-      >
-        <strong>{passage.title}</strong>
-        <div style={{ marginTop: 8 }}>{renderText(passage.text)}</div>
-        <div style={{ marginTop: 10 }}>
-          <button onClick={() => speak(passage.text.replace(/__\d+__/g, '___'), 0.9)}>
-            🔊 朗读全文
-          </button>
-        </div>
-      </div>
-
+      <ClozeContext passage={passage} />
       {passage.blanks.map((b) => (
         <Blank key={b.no} blank={b} day={day} />
       ))}
+    </div>
+  )
+}
+
+/** 完形篇章上下文(标题 + 带 __n__ 标记的正文 + 朗读),供 StudyFlow 单题屏顶部常驻。 */
+export function ClozeContext({ passage }: { passage: ClozePassage }) {
+  return (
+    <div
+      style={{
+        background: 'var(--surface-2)',
+        borderRadius: 10,
+        padding: 14,
+        lineHeight: 1.9,
+        marginBottom: 12,
+      }}
+    >
+      <strong>{passage.title}</strong>
+      <div style={{ marginTop: 8 }}>{renderText(passage.text)}</div>
+      <div style={{ marginTop: 10 }}>
+        <button onClick={() => speak(passage.text.replace(/__\d+__/g, '___'), 0.9)}>
+          🔊 朗读全文
+        </button>
+      </div>
     </div>
   )
 }
@@ -60,7 +65,7 @@ function renderText(text: string) {
   )
 }
 
-function Blank({ blank, day }: { blank: ClozePassage['blanks'][number]; day?: number }) {
+export function Blank({ blank, day }: { blank: ClozePassage['blanks'][number]; day?: number }) {
   const [picked, setPicked] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const correct = picked === blank.answer
