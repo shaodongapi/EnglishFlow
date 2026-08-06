@@ -82,7 +82,14 @@ export default function App() {
   const phase = phaseOfDay(planDay)
   const wordMap = getMap()
   const bank = getBank()
-  const newWords: Word[] = plan ? (plan.vocab.map((w) => wordMap[w]).filter(Boolean) as Word[]) : []
+
+  // 关键:必须 memoize。plan / wordMap 在 bankReady 后引用稳定,
+  // 故 newWords 引用也稳定 —— 避免 App 因 SW 激活/打卡等异步重渲染时,
+  // 把新的数组引用传给 Vocab/Spelling 触发它们重建队列并把 idx 重置为 0(偶现「回第一张卡」)。
+  const newWords: Word[] = useMemo(
+    () => (plan ? (plan.vocab.map((w) => wordMap[w]).filter(Boolean) as Word[]) : []),
+    [plan, wordMap]
+  )
 
   // 派生交互数据(手写优先,派生补齐)。
   // 注意:所有 hook 必须在任何早返回之前调用(Rules of Hooks),故在此处 useMemo。

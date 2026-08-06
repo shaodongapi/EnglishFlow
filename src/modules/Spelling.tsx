@@ -14,37 +14,42 @@ interface Props {
 
 /** 单词默写:看中文释义(+音标+朗读),拼出英文。拼错记入错题本「单词」类。 */
 export function Spelling({ todayDay, newWords, day }: Props) {
-  const [progressMap, setProgressMap] = useState<Record<string, WordProgress>>({})
   const [queue, setQueue] = useState<Word[]>([])
   const [idx, setIdx] = useState(0)
   const [text, setText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [revealed, setRevealed] = useState(false) // 答错后显示正确拼写
-  const [reviewWords, setReviewWords] = useState<Word[]>([])
+  const [reviewCount, setReviewCount] = useState(0)
 
+  // 队列仅在「数据源」变化时重建一次:todayDay / newWords。
+  // newWords 由 App memoize 保证引用稳定,异步重渲染(SW 激活等)不会重置 idx、清空已输入内容。
   useEffect(() => {
+    let alive = true
     getAllProgress().then((all) => {
+      if (!alive) return
       const map: Record<string, WordProgress> = {}
       all.forEach((p) => (map[p.word] = p))
-      setProgressMap(map)
+      const newSet = new Set(newWords.map((w) => w.word))
       const dueReview = getBank().filter(
-        (w) => map[w.word] && isDue(map[w.word], todayDay) && !newWords.find((nw) => nw.word === w.word)
+        (w) => map[w.word] && isDue(map[w.word], todayDay) && !newSet.has(w.word)
       )
-      setReviewWords(dueReview)
+      setReviewCount(dueReview.length)
+      const freshNew = newWords.filter((w) => !map[w.word])
+      setQueue([...freshNew, ...dueReview])
+      setIdx(0)
+      setText('')
+      setSubmitted(false)
+      setRevealed(false)
     })
+    return () => {
+      alive = false
+    }
   }, [todayDay, newWords])
-
-  useEffect(() => {
-    const freshNew = newWords.filter((w) => !progressMap[w.word])
-    setQueue([...freshNew, ...reviewWords])
-    setIdx(0)
-    setText('')
-    setSubmitted(false)
-    setRevealed(false)
-  }, [progressMap, reviewWords, newWords])
 
   const current = queue[idx]
   const total = queue.length
+  // 新词/复习标签:inline 判断(newWords 引用稳定,.some 开销可忽略)
+  const isNew = current ? newWords.some((w) => w.word === current.word) : false
 
   // 词义取第一条,做题面
   const cue = useMemo(() => {
@@ -89,7 +94,7 @@ export function Spelling({ todayDay, newWords, day }: Props) {
       <div className="card center">
         <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
         <h2>今天的默写都完成啦</h2>
-        <p className="muted">新词 {newWords.length} + 复习 {reviewWords.length} 已练完。</p>
+        <p className="muted">新词 {newWords.length} + 复习 {reviewCount} 已练完。</p>
         <p className="muted" style={{ marginTop: 12 }}>拼错的词已自动进入「错题本 · 单词」。</p>
       </div>
     )
@@ -104,7 +109,7 @@ export function Spelling({ todayDay, newWords, day }: Props) {
         <span className="badge">{idx + 1} / {total}</span>
       </div>
       <div className="meta">
-        {progressMap[current.word] ? '复习' : '新词'} · 看释义拼写英文
+        {isNew ? '新词' : '复习'} · 看释义拼写英文
       </div>
 
       <div className="progress">

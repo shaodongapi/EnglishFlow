@@ -18,30 +18,30 @@ export function Vocab({ todayDay, newWords, onProgress }: Props) {
   const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [totalDone, setTotalDone] = useState(0)
-  const [reviewWords, setReviewWords] = useState<Word[]>([])
 
-  // 加载所有进度
+  // 队列仅在「数据源」变化时重建一次:todayDay / newWords。
+  // newWords 由 App memoize 保证引用稳定,故 SW 激活/打卡等异步重渲染不会触发本 effect,
+  // 也就不会把用户正在翻的卡 idx 重置为 0。
   useEffect(() => {
+    let alive = true
     getAllProgress().then((all) => {
+      if (!alive) return
       const map: Record<string, WordProgress> = {}
       all.forEach((p) => (map[p.word] = p))
       setProgressMap(map)
-
-      // 今日新词 + 到期复习词
+      const newSet = new Set(newWords.map((w) => w.word))
       const dueReview = getBank().filter(
-        (w) => map[w.word] && isDue(map[w.word], todayDay) && !newWords.find((nw) => nw.word === w.word)
+        (w) => map[w.word] && isDue(map[w.word], todayDay) && !newSet.has(w.word)
       )
-      setReviewWords(dueReview)
+      const freshNew = newWords.filter((w) => !map[w.word])
+      setQueue([...freshNew, ...dueReview])
+      setIdx(0)
+      setFlipped(false)
     })
+    return () => {
+      alive = false
+    }
   }, [todayDay, newWords])
-
-  // 队列 = 今日新词(尚未学的) + 到期复习词
-  useEffect(() => {
-    const freshNew = newWords.filter((w) => !progressMap[w.word])
-    setQueue([...freshNew, ...reviewWords])
-    setIdx(0)
-    setFlipped(false)
-  }, [progressMap, reviewWords, newWords])
 
   const current = queue[idx]
   const total = queue.length
@@ -66,7 +66,7 @@ export function Vocab({ todayDay, newWords, onProgress }: Props) {
       <div className="card center">
         <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
         <h2>今天的单词都搞定啦</h2>
-        <p className="muted">新词 {newWords.length} + 复习 {reviewWords.length},继续保持!</p>
+        <p className="muted">新词 {newWords.length} + 复习 {total - newWords.length},继续保持!</p>
         <p className="muted" style={{ marginTop: 12 }}>
           明天系统会按记忆曲线安排到期复习。
         </p>
